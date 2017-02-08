@@ -9,15 +9,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-int takeOutWords( char *fileContent, char **words);
-void sortWords( char **words, int wordCount);
+char** takeOutWords( char *fileContent);
+char** sortWords( char **words, int wordCount);
+char** makeUnique( char **words, int wordCount);
+char* toLowercase( char *word);
 
 int main(int argc, const char * argv[]) {
     char *fileContent;
     long fileSize;
     char **words = NULL;
-    int wordCount;
+    int wordCount = 0, i;
     
     if ( argc > 1) {
         
@@ -37,11 +40,25 @@ int main(int argc, const char * argv[]) {
         
         fread( fileContent, fileSize, 1, wordsFile);
         
-        wordCount = takeOutWords( fileContent, words);
-        //sortWords( words, wordCount);
+        words = takeOutWords( fileContent);
         
-        //printf( "%s\n", words[0]);
+        while ( words[ wordCount] != NULL) {
+            wordCount ++;
+        }
         
+        words = makeUnique( words, wordCount);
+        
+        wordCount = 0;
+        while ( words[ wordCount] != NULL) {
+            wordCount ++;
+        }
+        
+        words = sortWords( words, wordCount);
+        
+        for ( i=0; i < wordCount; i++) {
+            printf( "%s\n", words[i]);
+        }
+            
         printf( "sunt %d cuvinte\n", wordCount);
         
         free( fileContent);
@@ -53,7 +70,42 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
-void sortWords( char **words, int wordCount) {
+char* toLowercase( char *word) {
+    unsigned long i;
+    
+    for ( i=0; i < strlen( word); i++) {
+        word[i] = tolower( word[i]);
+    }
+    
+    return  word;
+}
+
+char** makeUnique( char **words, int wordCount) {
+    int i, j;
+    
+    for ( i=0; i < wordCount-1; i++) {
+        for ( j=i+1; j < wordCount; j++) {
+            if ( strcmp( toLowercase( words[i]), toLowercase( words[j])) == 0 ) {
+                if ( j == wordCount-1) {
+                    words[ wordCount-1] = NULL;
+                    wordCount --;
+                }
+                else {
+                    strcpy( words[j], words[ wordCount-1]);
+                    words[ wordCount-1] = NULL;
+                    wordCount --;
+                }
+                j--;
+            }
+         }
+    }
+    
+    words = realloc( words, wordCount * sizeof(char*));
+    
+    return words;
+}
+
+char** sortWords( char **words, int wordCount) {
     int i, j;
     char *wordKeeper;
     
@@ -80,14 +132,16 @@ void sortWords( char **words, int wordCount) {
             }
         }
     }
-    
+
     free( wordKeeper);
+    return words;
 }
 
-int takeOutWords( char *fileContent, char **words) {
+char** takeOutWords( char *fileContent) {
     char delimitators[] = " \n,.;\"\t-:!?";
     char *wordKeeper;
     int wordCount = 0;
+    char **words;
     
     wordKeeper = malloc( strlen( fileContent) + 1);
     if ( wordKeeper == NULL) {
@@ -98,26 +152,32 @@ int takeOutWords( char *fileContent, char **words) {
     if ( words == NULL) {
         exit( -1);
     }
-    
     wordKeeper = strtok( fileContent, delimitators);
     words[wordCount] = malloc( strlen(wordKeeper) + 1);
     if ( words[ wordCount] == NULL) {
         exit( -1);
     }
     strcpy( words[ wordCount], wordKeeper);
+    
     wordKeeper = strtok( NULL, delimitators);
-    while ( words[ wordCount] != NULL) {
-        printf( "%s\n", words[ wordCount]);
+    
+    while ( wordKeeper != NULL) {
+        
         wordCount ++;
         words = realloc( words, (wordCount+1) * sizeof(char*));
+        if ( words == NULL) {
+            exit( -1);
+        }
         words[wordCount] = malloc( strlen(wordKeeper) + 1);
         if ( words[ wordCount] == NULL) {
             exit( -1);
         }
         strcpy( words[ wordCount], wordKeeper);
         wordKeeper = strtok( NULL, delimitators);
+        
     }
+    
     free( wordKeeper);
     
-    return wordCount;
+    return words;
 }
