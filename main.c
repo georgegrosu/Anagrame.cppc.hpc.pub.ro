@@ -22,7 +22,7 @@ int main(int argc, const char * argv[]) {
     char *fileContent;
     long fileSize;
     char **words = NULL;
-    int wordCount = 0;
+    int wordCount = 0, i;
     
     if ( argc > 1) {
         
@@ -59,6 +59,12 @@ int main(int argc, const char * argv[]) {
         
         listWords( words, wordCount);
         
+        for ( i=0; i < wordCount; i++) {
+            free( words[i]);
+        }
+        
+        free( words);
+        
         free( fileContent);
         fclose( wordsFile);
     }
@@ -87,6 +93,8 @@ void listWords( char **words, int wordCount) {
             printf( "\n");
         }
     }
+    
+    free( printedWord);
 }
 
 int isAnagram( char *firstWord, char *secondWord){
