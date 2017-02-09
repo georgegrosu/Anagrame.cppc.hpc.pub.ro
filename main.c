@@ -15,12 +15,14 @@ char** takeOutWords( char *fileContent);
 char** sortWords( char **words, int wordCount);
 char** makeUnique( char **words, int wordCount);
 char* toLowercase( char *word);
+int isAnagram( char *firstWord, char *secondWord);
+void listWords( char **words, int wordCount);
 
 int main(int argc, const char * argv[]) {
     char *fileContent;
     long fileSize;
     char **words = NULL;
-    int wordCount = 0, i;
+    int wordCount = 0;
     
     if ( argc > 1) {
         
@@ -55,11 +57,7 @@ int main(int argc, const char * argv[]) {
         
         words = sortWords( words, wordCount);
         
-        for ( i=0; i < wordCount; i++) {
-            printf( "%s\n", words[i]);
-        }
-            
-        printf( "sunt %d cuvinte\n", wordCount);
+        listWords( words, wordCount);
         
         free( fileContent);
         fclose( wordsFile);
@@ -68,6 +66,49 @@ int main(int argc, const char * argv[]) {
         printf( "Introduceti numele fisierului!\n");
     }
     return 0;
+}
+
+void listWords( char **words, int wordCount) {
+    int i, j;
+    int *printedWord;
+    
+    printedWord = calloc( wordCount, sizeof(int));
+    
+    for ( i=0; i < wordCount; i++) {
+        if ( printedWord[i] == 0) {
+            printf( "%s", words[i]);
+            printedWord[i] = 1;
+            for ( j=i+1; j < wordCount; j++) {
+                if ( isAnagram( words[i], words[j]) && printedWord[j] == 0) {
+                    printf( "-%s", words[j]);
+                    printedWord[j] = 1;
+                }
+            }
+            printf( "\n");
+        }
+    }
+}
+
+int isAnagram( char *firstWord, char *secondWord){
+    
+    int firstWordCharsSum=0, secondWordCharsSum=0;
+    unsigned long i;
+    
+    for ( i=0; i < strlen( firstWord); i++) {
+        firstWordCharsSum += firstWord[i];
+    }
+
+    for ( i=0; i < strlen( secondWord); i++) {
+        secondWordCharsSum += secondWord[i];
+    }
+    
+    if ( firstWordCharsSum == secondWordCharsSum) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+    
 }
 
 char* toLowercase( char *word) {
@@ -114,21 +155,25 @@ char** sortWords( char **words, int wordCount) {
     for ( i=0; i < wordCount-1; i++) {
         for ( j=i+1; j < wordCount; j++) {
             if ( strcmp( words[i], words[j]) > 0) {
+                
                 wordKeeper = realloc( wordKeeper, strlen(words[i]) + 1);
                 if ( words[i] == NULL) {
                     exit( -1);
                 }
                 strcpy( wordKeeper, words[i]);
+                
                 words[i] = realloc( words[i], strlen(words[j]) + 1);
                 if ( words[i] == NULL) {
                     exit( -1);
                 }
                 strcpy( words[i], words[j]);
-                words[i] = realloc( words[j], strlen(wordKeeper) + 1);
+                
+                words[j] = realloc( words[j], strlen(wordKeeper) + 1);
                 if ( words[j] == NULL) {
                     exit( -1);
                 }
                 strcpy( words[j], wordKeeper);
+            
             }
         }
     }
